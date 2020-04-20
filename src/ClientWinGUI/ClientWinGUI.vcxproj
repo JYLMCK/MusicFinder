@@ -151,6 +151,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MusicFinderWindow.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MusicFinderWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

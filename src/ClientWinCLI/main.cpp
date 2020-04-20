@@ -68,7 +68,7 @@ int main()
 		if (result == MusicFinderClient::InputResult::VALID)
 		{
 			std::cout << "Searching for [ " << mfc.GetNoteSequence() << "]\n";
-			send(hSocket, mfc.GetDiffSequence().c_str(), mfc.GetDiffSequence().size(), 0);
+			send(hSocket, mfc.GetDiffSequence().c_str(), static_cast<int>(mfc.GetDiffSequence().size()), 0);
 		}
 		else if (result == MusicFinderClient::InputResult::INVALID)
 		{
