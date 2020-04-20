@@ -5,7 +5,7 @@ MusicFinderWindow::MusicFinderWindow()
 	constexpr const wchar_t* CLASS_NAME = L"Music Finder Window";
 	_wc.cbSize = sizeof(_wc);
 	_wc.hInstance = nullptr;
-	_wc.lpfnWndProc = WndProc;
+	_wc.lpfnWndProc = HandleMsgSetup;
 	_wc.lpszClassName = CLASS_NAME;
 	_wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 
@@ -41,7 +41,26 @@ MusicFinderWindow::MusicFinderWindow()
 	ShowWindow(_searchBtn, SW_SHOWDEFAULT);
 }
 
-LRESULT CALLBACK MusicFinderWindow::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MusicFinderWindow::HandleMsgSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == WM_NCCREATE)
+	{
+		const CREATESTRUCTW* const pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
+		MusicFinderWindow* const pWnd = static_cast<MusicFinderWindow*>(pCreate->lpCreateParams);
+		SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWnd));
+		SetWindowLongPtrW(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MusicFinderWindow::HandleMsgThunk));
+		return pWnd->HandleMessage(hWnd, uMsg, wParam, lParam);
+	}
+	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK MusicFinderWindow::HandleMsgThunk(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	MusicFinderWindow* const pWnd = reinterpret_cast<MusicFinderWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+	return pWnd->HandleMessage(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
