@@ -24,13 +24,13 @@ MusicFinderWindow::MusicFinderWindow()
 
 	_mainHWND = CreateWindowExW(0, CLASS_NAME, L"Music Finder", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
 	                            CW_USEDEFAULT, nWidth / 2, nHeight / 2, nullptr, _hMenuBar,
-	                            nullptr, nullptr);
+	                            nullptr, this);
 	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER, nWidth / 8, nHeight / 8,
 	                           nWidth / 4 - buttonWidth - 10, buttonHeight, _mainHWND, nullptr,
-	                           nullptr, nullptr);
+	                           nullptr, this);
 	_searchBtn = CreateWindowExW(0, L"BUTTON", L"Search!", WS_CHILD | BS_DEFPUSHBUTTON,
 	                            nWidth * 3 / 8 - buttonWidth, nHeight / 8, buttonWidth,
-	                            buttonHeight, _mainHWND, nullptr, nullptr, nullptr);
+	                            buttonHeight, _mainHWND, nullptr, nullptr, this);
 
 	HFONT hFont = CreateFontW(0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Calibri Light");
 	SendMessageW(_editWin, WM_SETFONT, (WPARAM)hFont, 0);
@@ -68,6 +68,10 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		PostQuitMessage(0);
 		return 0;
 
+	case WM_CLOSE:
+		DestroyWindow(_mainHWND);
+		return 0;
+
 	case WM_PAINT:
 	{
 		PAINTSTRUCT	ps;
@@ -85,6 +89,14 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 			            L"You can support JYLMCK by donating! We accept donations at\n\nWoori "
 			            L"1002-059-453022",
 			            L"Support JYLMCK", MB_OK);
+			return 0;
+		}
+		else if ((HWND)lParam == _searchBtn && HIWORD(wParam) == BN_CLICKED)
+		{
+			wchar_t buf[512] = {0};
+			GetWindowTextW(_editWin, buf, sizeof(buf) / sizeof(buf[0]));
+			MessageBoxW(hWnd, buf, L"Search", MB_OK);
+			return 0;
 		}
 	}
 	}
