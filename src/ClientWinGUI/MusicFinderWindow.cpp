@@ -11,11 +11,11 @@ MusicFinderWindow::MusicFinderWindow()
 
 	RegisterClassExW(&_wc);
 
-	_hMenuBar = CreateMenu();
-	_hMenu = CreateMenu();
-	AppendMenuW(_hMenu, MF_STRING, 0, L"About Music Finder");
-	AppendMenuW(_hMenu, MF_STRING, 1, L"Support JYLMCK");
-	AppendMenuW(_hMenuBar, MF_POPUP, (UINT_PTR)_hMenu, L"Help");
+	HMENU hMenuBar = CreateMenu();
+	HMENU hMenu = CreateMenu();
+	AppendMenuW(hMenu, MF_STRING, 0, L"About Music Finder");
+	AppendMenuW(hMenu, MF_STRING, 1, L"Support JYLMCK");
+	AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenu, L"Help");
 	
 	int nWidth = GetSystemMetrics(SM_CXSCREEN);
 	int nHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -23,7 +23,7 @@ MusicFinderWindow::MusicFinderWindow()
 	int buttonHeight = 25;
 
 	_mainHWND = CreateWindowExW(0, CLASS_NAME, L"Music Finder", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-	                            CW_USEDEFAULT, nWidth / 2, nHeight / 2, nullptr, _hMenuBar,
+	                            CW_USEDEFAULT, nWidth / 2, nHeight / 2, nullptr, hMenuBar,
 	                            nullptr, this);
 	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER, nWidth / 8, nHeight / 8,
 	                           nWidth / 4 - buttonWidth - 10, buttonHeight, _mainHWND, nullptr,
