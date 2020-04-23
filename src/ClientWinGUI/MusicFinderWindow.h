@@ -5,8 +5,10 @@ class MusicFinderWindow
 {
 private:
 	WNDCLASSEX _wc{0};
-	HWND _mainHWND;
-	HWND _editWin, _searchBtn;
+	HWND _mainHWND,	_editWin, _searchBtn;
+	HMENU _hMenuBar, _hMenu;
+	int _btnWidth, _btnHeight;
+	int _width, _height;
 
 public:
 	MusicFinderWindow();

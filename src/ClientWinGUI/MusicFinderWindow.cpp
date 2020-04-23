@@ -11,26 +11,26 @@ MusicFinderWindow::MusicFinderWindow()
 
 	RegisterClassExW(&_wc);
 
-	HMENU hMenuBar = CreateMenu();
-	HMENU hMenu = CreateMenu();
-	AppendMenuW(hMenu, MF_STRING, 0, L"About Music Finder");
-	AppendMenuW(hMenu, MF_STRING, 1, L"Support JYLMCK");
-	AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenu, L"Help");
+	_hMenuBar = CreateMenu();
+	_hMenu = CreateMenu();
+	AppendMenuW(_hMenu, MF_STRING, 0, L"About Music Finder");
+	AppendMenuW(_hMenu, MF_STRING, 1, L"Support JYLMCK");
+	AppendMenuW(_hMenuBar, MF_POPUP, (UINT_PTR)_hMenu, L"Help");
 	
-	int nWidth = GetSystemMetrics(SM_CXSCREEN);
-	int nHeight = GetSystemMetrics(SM_CYSCREEN);
-	int buttonWidth = 90;
-	int buttonHeight = 25;
+	_width = GetSystemMetrics(SM_CXSCREEN) / 2;
+	_height = GetSystemMetrics(SM_CYSCREEN) / 2;
+	_btnWidth = 90;
+	_btnHeight = 25;
 
 	_mainHWND = CreateWindowExW(0, CLASS_NAME, L"Music Finder", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-	                            CW_USEDEFAULT, nWidth / 2, nHeight / 2, nullptr, hMenuBar,
+	                            CW_USEDEFAULT, _width, _height, nullptr, _hMenuBar,
 	                            nullptr, this);
-	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER, nWidth / 8, nHeight / 8,
-	                           nWidth / 4 - buttonWidth - 10, buttonHeight, _mainHWND, nullptr,
+	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER | ES_UPPERCASE, _width / 4, _height / 4,
+	                           _width / 2 - _btnWidth - 10, _btnHeight, _mainHWND, nullptr,
 	                           nullptr, this);
 	_searchBtn = CreateWindowExW(0, L"BUTTON", L"Search!", WS_CHILD | BS_DEFPUSHBUTTON,
-	                            nWidth * 3 / 8 - buttonWidth, nHeight / 8, buttonWidth,
-	                            buttonHeight, _mainHWND, nullptr, nullptr, this);
+	                            _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth,
+	                            _btnHeight, _mainHWND, nullptr, nullptr, this);
 
 	HFONT hFont = CreateFontW(0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Calibri Light");
 	SendMessageW(_editWin, WM_SETFONT, (WPARAM)hFont, 0);
@@ -69,8 +69,18 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		return 0;
 
 	case WM_CLOSE:
+		DestroyMenu(_hMenu);
+		DestroyMenu(_hMenuBar);
 		DestroyWindow(_mainHWND);
 		return 0;
+
+	case WM_SIZE:
+	{
+		_width = LOWORD(lParam);
+		SetWindowPos(_editWin, (HWND)0, _width / 4, _height / 4, _width / 2 - _btnWidth - 10, _btnHeight, SWP_SHOWWINDOW);
+		SetWindowPos(_searchBtn, (HWND)0, _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth, _btnHeight, SWP_SHOWWINDOW);
+		return 0;
+	}
 
 	case WM_PAINT:
 	{
@@ -78,6 +88,14 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		HDC hdc = BeginPaint(hWnd, &ps);
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_BACKGROUND));
 		EndPaint(hWnd, &ps);
+		return 0;
+	}
+
+	case WM_GETMINMAXINFO:
+	{
+		LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+		lpMMI->ptMinTrackSize.x = 480;
+		lpMMI->ptMinTrackSize.y = 270;
 		return 0;
 	}
 
