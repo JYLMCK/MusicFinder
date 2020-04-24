@@ -1,4 +1,8 @@
+#include <codecvt>
+#include <sstream>
+
 #include "MusicFinderWindow.h"
+#include "shared/MusicFinderCore.h"
 
 MusicFinderWindow::MusicFinderWindow()
 {
@@ -16,21 +20,20 @@ MusicFinderWindow::MusicFinderWindow()
 	AppendMenuW(_hMenu, MF_STRING, 0, L"About Music Finder");
 	AppendMenuW(_hMenu, MF_STRING, 1, L"Support JYLMCK");
 	AppendMenuW(_hMenuBar, MF_POPUP, (UINT_PTR)_hMenu, L"Help");
-	
+
 	_width = GetSystemMetrics(SM_CXSCREEN) / 2;
 	_height = GetSystemMetrics(SM_CYSCREEN) / 2;
 	_btnWidth = 90;
 	_btnHeight = 25;
 
 	_mainHWND = CreateWindowExW(0, CLASS_NAME, L"Music Finder", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-	                            CW_USEDEFAULT, _width, _height, nullptr, _hMenuBar,
-	                            nullptr, this);
-	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER | ES_UPPERCASE, _width / 4, _height / 4,
-	                           _width / 2 - _btnWidth - 10, _btnHeight, _mainHWND, nullptr,
-	                           nullptr, this);
+	                            CW_USEDEFAULT, _width, _height, nullptr, _hMenuBar, nullptr, this);
+	_editWin = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_BORDER | ES_UPPERCASE, _width / 4,
+	                           _height / 4, _width / 2 - _btnWidth - 10, _btnHeight, _mainHWND,
+	                           nullptr, nullptr, this);
 	_searchBtn = CreateWindowExW(0, L"BUTTON", L"Search!", WS_CHILD | BS_DEFPUSHBUTTON,
-	                            _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth,
-	                            _btnHeight, _mainHWND, nullptr, nullptr, this);
+	                             _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth, _btnHeight,
+	                             _mainHWND, nullptr, nullptr, this);
 
 	HFONT hFont = CreateFontW(0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Calibri Light");
 	SendMessageW(_editWin, WM_SETFONT, (WPARAM)hFont, 0);
@@ -48,15 +51,18 @@ LRESULT CALLBACK MusicFinderWindow::HandleMsgSetup(HWND hWnd, UINT uMsg, WPARAM 
 		const CREATESTRUCTW* const pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
 		MusicFinderWindow* const pWnd = static_cast<MusicFinderWindow*>(pCreate->lpCreateParams);
 		SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWnd));
-		SetWindowLongPtrW(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MusicFinderWindow::HandleMsgThunk));
+		SetWindowLongPtrW(hWnd, GWLP_WNDPROC,
+		                  reinterpret_cast<LONG_PTR>(&MusicFinderWindow::HandleMsgThunk));
 		return pWnd->HandleMessage(hWnd, uMsg, wParam, lParam);
 	}
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT CALLBACK MusicFinderWindow::HandleMsgThunk(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MusicFinderWindow::HandleMsgThunk(HWND hWnd, UINT uMsg, WPARAM wParam,
+                                                   LPARAM lParam)
 {
-	MusicFinderWindow* const pWnd = reinterpret_cast<MusicFinderWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+	MusicFinderWindow* const pWnd =
+	    reinterpret_cast<MusicFinderWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
 	return pWnd->HandleMessage(hWnd, uMsg, wParam, lParam);
 }
 
@@ -77,14 +83,16 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	case WM_SIZE:
 	{
 		_width = LOWORD(lParam);
-		SetWindowPos(_editWin, (HWND)0, _width / 4, _height / 4, _width / 2 - _btnWidth - 10, _btnHeight, SWP_SHOWWINDOW);
-		SetWindowPos(_searchBtn, (HWND)0, _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth, _btnHeight, SWP_SHOWWINDOW);
+		SetWindowPos(_editWin, (HWND)0, _width / 4, _height / 4, _width / 2 - _btnWidth - 10,
+		             _btnHeight, SWP_SHOWWINDOW);
+		SetWindowPos(_searchBtn, (HWND)0, _width * 3 / 4 - _btnWidth, _height / 4, _btnWidth,
+		             _btnHeight, SWP_SHOWWINDOW);
 		return 0;
 	}
 
 	case WM_PAINT:
 	{
-		PAINTSTRUCT	ps;
+		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_BACKGROUND));
 		EndPaint(hWnd, &ps);
@@ -95,7 +103,7 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	{
 		LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
 		lpMMI->ptMinTrackSize.x = 480;
-		lpMMI->ptMinTrackSize.y = 270;
+		lpMMI->ptMinTrackSize.y = 420;
 		return 0;
 	}
 
@@ -111,13 +119,27 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		}
 		else if ((HWND)lParam == _searchBtn && HIWORD(wParam) == BN_CLICKED)
 		{
-			wchar_t buf[512] = {0};
-			GetWindowTextW(_editWin, buf, sizeof(buf) / sizeof(buf[0]));
-			MessageBoxW(hWnd, buf, L"Search", MB_OK);
+			wchar_t wbuf[256] = {0};
+			char buf[256] = {0};
+			GetWindowTextW(_editWin, wbuf, ARRAYSIZE(wbuf));
+			WideCharToMultiByte(CP_ACP, 0, wbuf, -1, buf, ARRAYSIZE(buf), nullptr, nullptr);
+
+			auto result = ParseInput(buf);
+			if (result.has_value())
+			{
+				std::stringstream ss;
+				ss << "You searched for [ "
+				   << result->first << "]\n\nDiff sequence is ["
+				   << result->second << "]";
+				MessageBoxA(hWnd, ss.str().c_str(), "Search Result", MB_OK);
+			}
+			else
+			{
+				MessageBoxW(hWnd, L"Invalid input!", L"Search Result", MB_ICONEXCLAMATION | MB_OK);
+			}
 			return 0;
 		}
 	}
 	}
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
-
