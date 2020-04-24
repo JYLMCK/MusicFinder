@@ -23,7 +23,7 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
-ColumnLimit: 120
+ColumnLimit: 0
 IndentWidth: 4
 MaxEmptyLinesToKeep: 1
 PointerAlignment: Left

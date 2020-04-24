@@ -1,6 +1,8 @@
 #include <WS2tcpip.h>
 #include <iostream>
-#include "MusicFinderClient.h"
+#include <string>
+
+#include "shared/MusicFinderCore.h"
 
 void ClearConsole()
 {
@@ -59,25 +61,18 @@ int main()
 
 	/****** Do things with server ******/
 
-	MusicFinderClient mfc;
-	MusicFinderClient::InputResult result;
-	do
+	std::string input;
+	std::getline(std::cin, input);
+	auto result = ParseInput(input);
+	if (result.has_value())
 	{
-		mfc.GetInput();
-		result = mfc.GetStatus();
-		if (result == MusicFinderClient::InputResult::VALID)
-		{
-			std::cout << "Searching for [ " << mfc.GetNoteSequence() << "]\n";
-			send(hSocket, mfc.GetDiffSequence().c_str(), static_cast<int>(mfc.GetDiffSequence().size()), 0);
-		}
-		else if (result == MusicFinderClient::InputResult::INVALID)
-		{
-			std::cout << "Invalid input!\n";
-		}
-		mfc.Reset();
-	} while (result != MusicFinderClient::InputResult::QUIT);
-
-	std::cout << "Bye!" << std::endl;
+		std::cout << "Searching for [ " << result->first << "]\n";
+		send(hSocket, result->second.c_str(), static_cast<int>(result->second.size()), 0);
+	}
+	else
+	{
+		std::cout << "Invalid input!\n";
+	}
 	/***********************************/
 
 	closesocket(hSocket);
