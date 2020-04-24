@@ -141,5 +141,5 @@ LRESULT MusicFinderWindow::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		}
 	}
 	}
-	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
